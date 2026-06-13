@@ -1,5 +1,6 @@
 // src/pages/AdminPanel.tsx
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // 1. IMPORTAMOS useNavigate AQUÍ
 
 interface Usuario {
   id: number;
@@ -8,7 +9,6 @@ interface Usuario {
   is_locked: boolean;
 }
 
-// Molde para la lista de empresas
 interface Cliente {
   id: number;
   name: string; 
@@ -16,9 +16,11 @@ interface Cliente {
 
 export const AdminPanel = () => {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-  const [clientes, setClientes] = useState<Cliente[]>([]); // Nuevo estado para las empresas
+  const [clientes, setClientes] = useState<Cliente[]>([]); 
   const [showModal, setShowModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  
+  const navigate = useNavigate(); // 2. INICIAMOS LA HERRAMIENTA DE NAVEGACIÓN
 
   const [formData, setFormData] = useState({
     username: '',
@@ -30,7 +32,6 @@ export const AdminPanel = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
 
-    // 1. Buscamos los usuarios
     const fetchUsuarios = async () => {
       try {
         const response = await fetch('http://localhost:3000/api/users', {
@@ -43,7 +44,6 @@ export const AdminPanel = () => {
       }
     };
 
-    // 2. Buscamos las empresas registradas
     const fetchClientes = async () => {
       try {
         const response = await fetch('http://localhost:3000/api/clients', {
@@ -56,27 +56,22 @@ export const AdminPanel = () => {
       }
     };
 
-    // Ejecutamos ambas tareas y quitamos la pantalla de carga
     Promise.all([fetchUsuarios(), fetchClientes()]).then(() => setIsLoading(false));
   }, []);
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // --- 🛡️ TU LÓGICA DE VALIDACIÓN FRONTAL ---
-    // 1. Verificamos que realmente se haya seleccionado una opción válida
     if (!formData.client_id || formData.client_id === "") {
       alert("⚠️ Por favor, seleccione la empresa a la que pertenece el usuario.");
-      return; // Detenemos la función aquí mismo, el servidor ni se entera
+      return; 
     }
 
-    // 2. Convertimos a número de forma segura
     const clientIdNumber = parseInt(formData.client_id);
     if (isNaN(clientIdNumber)) {
       alert("⚠️ El identificador de la empresa no es válido.");
       return;
     }
-    // --- FIN DE LA VALIDACIÓN ---
 
     const token = localStorage.getItem('token');
 
@@ -91,7 +86,7 @@ export const AdminPanel = () => {
           username: formData.username,
           password: formData.password,
           role: formData.role,
-          client_id: clientIdNumber // Enviamos el número validado
+          client_id: clientIdNumber 
         })
       });
 
@@ -116,12 +111,30 @@ export const AdminPanel = () => {
     <div style={{ padding: '20px', position: 'relative' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2>Panel de Control - Administrador</h2>
-        <button 
-          onClick={() => setShowModal(true)}
-          style={{ padding: '10px', background: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
-        >
-          + Crear Nuevo Usuario
-        </button>
+        
+        {/* --- AQUÍ ESTÁ EL NUEVO CONTENEDOR CON AMBOS BOTONES --- */}
+        <div style={{ display: 'flex', gap: '15px' }}>
+          <button 
+            onClick={() => navigate('/admin/clientes')}
+            style={{ padding: '10px 15px', background: '#17a2b8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}
+          >
+            🏢 Gestionar Empresas
+          </button>
+          
+          <button 
+            onClick={() => setShowModal(true)}
+            style={{ padding: '10px', background: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+          >
+            + Crear Nuevo Usuario
+          </button>
+
+          <button 
+          onClick={() => navigate('/admin/equipos')}
+          style={{ padding: '10px 15px', background: '#6f42c1', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}
+          >
+            📡 Inventario de Equipos
+          </button>
+        </div>
       </div>
 
       <table style={{ width: '100%', marginTop: '20px', textAlign: 'left', borderCollapse: 'collapse' }}>
@@ -131,6 +144,8 @@ export const AdminPanel = () => {
             <th style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>Usuario</th>
             <th style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>Rol</th>
             <th style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>Estado</th>
+            {/* 3. AÑADIMOS LA CABECERA DE LA COLUMNA DE ACCIONES */}
+            <th style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -141,6 +156,15 @@ export const AdminPanel = () => {
               <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{user.role}</td>
               <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
                 {user.is_locked ? '🔴 Bloqueado' : '🟢 Activo'}
+              </td>
+              <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
+                {/* 4. AÑADIMOS EL BOTÓN CON LA RUTA DINÁMICA DE CADA USUARIO */}
+                <button 
+                  onClick={() => navigate(`/admin/usuario/${user.id}`)}
+                  style={{ padding: '5px 10px', background: '#17a2b8', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                >
+                  ⚙️ Gestionar
+                </button>
               </td>
             </tr>
           ))}
@@ -186,7 +210,6 @@ export const AdminPanel = () => {
                 </select>
               </div>
               
-              {/* --- NUEVA LISTA DESPLEGABLE DE EMPRESAS --- */}
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block' }}>Empresa a la que pertenece:</label>
                 <select 
