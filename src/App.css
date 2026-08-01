@@ -181,4 +181,38 @@
     right: 0;
     border-right-color: var(--border);
   }
+
+
+.charts-card {
+  margin-top: 24px;
+}
+
+.chart-container {
+  width: 100%;
+  height: 360px;
+}
+
+.chart-empty {
+  min-height: 260px;
+  border-radius: 22px;
+  border: 1px dashed rgba(255,255,255,.14);
+  background: rgba(255,255,255,.035);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+}
+
+.chart-empty strong {
+  font-size: 20px;
+  color: #ffffff;
+}
+
+.chart-empty span {
+  margin-top: 10px;
+  color: #9f9f9f;
+  max-width: 620px;
+}
 }
